@@ -9,156 +9,116 @@ namespace HillEncryptorDecryptor
         private string key;
         private Dictionary<char, int> alphabetDictionary;
         private Dictionary<int, char> reverseAlphabetDictionary;
-        private int[,] keyMatrix;
+        private double[][] keyMatrix;
+        private double[][] inverseKeyMatrix;
 
         public HillCipher(string alphabet, string key)
         {
-            if (DuplicateChars(alphabet))
+            if (Helper.DuplicateChars(alphabet))
             {
                 throw new Exception("Alphabet contains duplicate characters");
             }
 
-            if (!IsSquare(key.Length))
+            if (!Helper.IsSquare(key.Length))
             {
                 throw new Exception("Key length is not squared");
             }
 
-            this.alphabet = alphabet;
-            this.key = key;
+            this.alphabet = alphabet.ToUpper();
             alphabetDictionary = BuildAlphabetDictionary(this.alphabet);
             reverseAlphabetDictionary = BuildReverseAlphabetDictionary(alphabetDictionary);
+            
+            this.key = key.ToUpper();
             keyMatrix = BuildKeyMatrix(this.key, alphabetDictionary);
-
-            if (MatrixOperation.IsMatrixInvertible(keyMatrix))
+            if (!MatrixOperation.IsMatrixInvertible(keyMatrix))
             {
-                throw new Exception("Key matrix is not inversible");
+                throw new Exception("Key matrix is not invertible");
+            }
+            if (!Helper.Coprime((int)MatrixOperation.MatrixDeterminant(keyMatrix), alphabetDictionary.Count + 65))
+            {
+                throw new Exception("Key matrix determenant must be coprime with alphabet length");
             }
 
+            MatrixOperation.PrintMatrix(keyMatrix, "Key Matrix");
         }
 
         public string Encrypt(string plaintext)
         {
-            if (key.Length > plaintext.Length)
-            {
-                throw new Exception("Key length must be less than plaintext length");
-            }
-
-            string ciphertext = "";
-            string temp = "";
-            Dictionary<int, char> NotCipheredCharacters = new Dictionary<int, char>();
-
-            for (int i = 0; i < plaintext.Length; i++)
-            {
-                if (!alphabetDictionary.ContainsKey(plaintext[i]))
-                {
-                    if (char.IsWhiteSpace(plaintext[i]) || char.IsPunctuation(plaintext[i]) || char.IsDigit(plaintext[i]))
-                    {
-                        NotCipheredCharacters.Add(i, plaintext[i]);
-                        continue;
-                    }
-                    throw new Exception(plaintext[i] + " is not exist in alphabet!");
-                }
-                temp += plaintext[i];
-                if (temp.Length == (int)Math.Sqrt(key.Length))
-                {
-                    int[,] tempMatrix = new int[temp.Length, 1];
-                    for (int j = 0; j < temp.Length; j++)
-                    {
-                        tempMatrix[j, 0] = temp[j];
-                    }
-
-                    int[,] cipheredMatrix = MatrixOperation.MultiplyMatrix(keyMatrix, tempMatrix);
-                    cipheredMatrix = MatrixOperation.MatrixModule(cipheredMatrix, alphabetDictionary.Count);
-                    ciphertext += ExtractChars(cipheredMatrix);
-                    temp = "";
-                }
-            }
-            if (temp.Length > 0)
-            {
-                ciphertext += temp;
-            }
-            foreach(KeyValuePair<int, char> pair in NotCipheredCharacters)
-            {
-                ciphertext = ciphertext.Insert(pair.Key, pair.Value.ToString());
-            }
-
-            return ciphertext;
+            return EncrpyDecrypt(plaintext, "ENCRYPT");
         }
 
         public string Decrypt(string ciphertext)
         {
-            if (key.Length > ciphertext.Length)
+            inverseKeyMatrix = MatrixOperation.MatrixInverse(keyMatrix);
+            MatrixOperation.PrintMatrix(inverseKeyMatrix, "Inverse Matrix");
+            
+            inverseKeyMatrix = MatrixOperation.MatrixModule(inverseKeyMatrix, alphabetDictionary.Count);
+            MatrixOperation.PrintMatrix(inverseKeyMatrix, "Inverse Matrix % 26");
+
+            return EncrpyDecrypt(ciphertext, "DECRYPT");
+        }
+
+        public string EncrpyDecrypt(string input, string mode = "ENCRYPT")
+        {
+            if (mode != "ENCRYPT" && mode != "DECRYPT")
             {
-                throw new Exception("Key length must be less than plaintext length");
+                throw new Exception("Invalid mode. Specify ENCRYPT or DECRYPT");
             }
 
-            string plaintext = "";
-            string temp = "";
-            Dictionary<int, char> PlainCharacters = new Dictionary<int, char>();
-            for (int i = 0; i < ciphertext.Length; i++)
+            input = input.ToUpper();
+            string inputSubString = "";
+
+            string output = "";
+            int keyMatrixOrder = keyMatrix.Length;
+            Dictionary<int, char> NotCipheredCharacters = new Dictionary<int, char>();
+
+            for (int i = 0; i < input.Length; i++)
             {
-                if (!alphabetDictionary.ContainsKey(ciphertext[i]))
+                if (!alphabetDictionary.ContainsKey(input[i]))
                 {
-                    if (char.IsWhiteSpace(ciphertext[i]) || char.IsPunctuation(ciphertext[i]) || char.IsDigit(ciphertext[i]))
+                    if (char.IsWhiteSpace(input[i]) || char.IsPunctuation(input[i]) || char.IsDigit(input[i]))
                     {
-                        PlainCharacters.Add(i, ciphertext[i]);
+                        NotCipheredCharacters.Add(i, input[i]);
                         continue;
                     }
-                    throw new Exception(ciphertext[i] + " is not exist in alphabet!");
+                    throw new Exception(input[i] + " is not exist in alphabet!");
                 }
-                temp += ciphertext[i];
-                if (temp.Length == (int)Math.Sqrt(key.Length))
+
+                inputSubString += input[i];
+                if (inputSubString.Length == keyMatrixOrder)
                 {
-                    int[,] tempMatrix = new int[temp.Length, 1];
-                    for (int j = 0; j < temp.Length; j++)
+                    double[][] inputSubStringMatrix = Helper.OneColumnMatrix(inputSubString, alphabetDictionary);
+                    Console.WriteLine(inputSubString);
+                    MatrixOperation.PrintMatrix(inputSubStringMatrix, "Input Substring Matrix");
+
+                    double[][] subOutputMatrix;
+                    if (mode == "DECRYPT")
                     {
-                        tempMatrix[j, 0] = temp[j];
+                        subOutputMatrix = MatrixOperation.MultiplyMatrix(inverseKeyMatrix, inputSubStringMatrix);
                     }
-
-                    int[,] inverseKeyMatrix = MatrixAdvancedOperations.Get2DMatrixInverse<int>(keyMatrix);
-                    int[,] plainMatrix = MatrixOperation.MultiplyMatrix(keyMatrix, tempMatrix);
-                    plainMatrix = MatrixOperation.MatrixModule(plainMatrix, alphabetDictionary.Count);
-                    plaintext += ExtractChars(plainMatrix);
-                    temp = "";
-                }
-
-            }
-
-            return plaintext;
-        }
-
-        private bool DuplicateChars(string alphabet)
-        {
-            for (int i = 0; i < alphabet.Length - 1; i++)
-            {
-                for (int j = i + 1; j < alphabet.Length; j++)
-                {
-                    if (alphabet[i] == alphabet[j])
+                    else
                     {
-                        return true;
+                        subOutputMatrix = MatrixOperation.MultiplyMatrix(keyMatrix, inputSubStringMatrix);
                     }
+                    MatrixOperation.PrintMatrix(subOutputMatrix, "Sub Output Matrix");
+                    subOutputMatrix = MatrixOperation.MatrixModule(subOutputMatrix, alphabetDictionary.Count);
+                    MatrixOperation.PrintMatrix(subOutputMatrix, "Sub Output Matrix % 26");
+
+                    output += Helper.ExtractChars(subOutputMatrix, reverseAlphabetDictionary);
+                    inputSubString = "";
                 }
             }
-            return false;
-        }
 
-        private bool IsSquare(int number)
-        {
-            return Math.Sqrt(number) % 1 == 0;
-        }
-
-        private string ExtractChars(int[,] matrix)
-        {
-            string result = "";
-            for (int i = 0; i < matrix.GetLength(0); i++)
+            if (inputSubString.Length > 0)
             {
-                for (int j = 0; j < matrix.GetLength(1); j++)
-                {
-                    result += reverseAlphabetDictionary[matrix[i,j]];
-                }
+                output += inputSubString;
+            }
+            foreach (KeyValuePair<int, char> pair in NotCipheredCharacters)
+            {
+                output = output.Insert(pair.Key, pair.Value.ToString());
             }
 
-            return result;
+            return output;
         }
 
         private Dictionary<char, int> BuildAlphabetDictionary(string alphabet)
@@ -185,22 +145,21 @@ namespace HillEncryptorDecryptor
             return result;
         }
         
-        private int[,] BuildKeyMatrix(string key, Dictionary<char, int> dictionary)
+        private double[][] BuildKeyMatrix(string key, Dictionary<char, int> dictionary)
         {
             int matrixOrder = (int)Math.Sqrt(key.Length);
-            int[,] matrix = new int[matrixOrder, matrixOrder];
+            double[][] matrix = MatrixOperation.MatrixCreate(matrixOrder, matrixOrder);
             int keyIndex = 0;
             for (int i = 0; i < matrixOrder; i++)
             {
                 for (int j = 0; j < matrixOrder; j++)
                 {
-                    matrix[i, j] = dictionary[key[keyIndex]];
+                    matrix[i][j] = dictionary[key[keyIndex]];
                     keyIndex++;
                 }
             }
 
             return matrix;
         }
-
     }
 }

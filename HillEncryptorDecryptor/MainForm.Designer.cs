@@ -213,7 +213,7 @@
             this.decryptionPlaintextTextBox.Name = "decryptionPlaintextTextBox";
             this.decryptionPlaintextTextBox.ReadOnly = true;
             this.decryptionPlaintextTextBox.Size = new System.Drawing.Size(331, 125);
-            this.decryptionPlaintextTextBox.TabIndex = 12;
+            this.decryptionPlaintextTextBox.TabIndex = 10;
             // 
             // decryptionKeyTextBox
             // 
@@ -221,7 +221,7 @@
             this.decryptionKeyTextBox.Location = new System.Drawing.Point(109, 181);
             this.decryptionKeyTextBox.Name = "decryptionKeyTextBox";
             this.decryptionKeyTextBox.Size = new System.Drawing.Size(331, 25);
-            this.decryptionKeyTextBox.TabIndex = 12;
+            this.decryptionKeyTextBox.TabIndex = 8;
             // 
             // decryptionButton
             // 
@@ -231,7 +231,7 @@
             this.decryptionButton.Location = new System.Drawing.Point(227, 222);
             this.decryptionButton.Name = "decryptionButton";
             this.decryptionButton.Size = new System.Drawing.Size(81, 42);
-            this.decryptionButton.TabIndex = 13;
+            this.decryptionButton.TabIndex = 9;
             this.decryptionButton.Text = "Decrypt";
             this.decryptionButton.UseVisualStyleBackColor = false;
             this.decryptionButton.Click += new System.EventHandler(this.decryptionButton_Click);
@@ -254,7 +254,7 @@
             this.decryptionCiphertextTextBox.Multiline = true;
             this.decryptionCiphertextTextBox.Name = "decryptionCiphertextTextBox";
             this.decryptionCiphertextTextBox.Size = new System.Drawing.Size(331, 95);
-            this.decryptionCiphertextTextBox.TabIndex = 11;
+            this.decryptionCiphertextTextBox.TabIndex = 7;
             // 
             // decryptionGroupBox
             // 
@@ -283,7 +283,7 @@
             this.decryptionAlphabetTextBox.Location = new System.Drawing.Point(109, 37);
             this.decryptionAlphabetTextBox.Name = "decryptionAlphabetTextBox";
             this.decryptionAlphabetTextBox.Size = new System.Drawing.Size(331, 25);
-            this.decryptionAlphabetTextBox.TabIndex = 10;
+            this.decryptionAlphabetTextBox.TabIndex = 6;
             this.decryptionAlphabetTextBox.Text = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
             // 
             // MainForm

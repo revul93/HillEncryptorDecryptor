@@ -10,9 +10,8 @@ namespace HillEncryptorDecryptor
             InitializeComponent();
         }
 
-        private bool ValidEncryptionInput()
+        private bool ISEncryptionInputValid()
         {
-            // التحقق من أن حقول الإدخال ليست فارغة
             if (String.IsNullOrEmpty(encryptionAlphabetTextBox.Text))
             {
                 MessageBox.Show("Alphabet can't be empty", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -34,7 +33,7 @@ namespace HillEncryptorDecryptor
 
         private void encryptionButton_Click(object sender, EventArgs e)
         {
-            if (!ValidEncryptionInput())
+            if (!ISEncryptionInputValid())
             {
                 return;
             }
@@ -52,17 +51,43 @@ namespace HillEncryptorDecryptor
         }
 
 
-        private bool ValidateDecryptionInput()
+        private bool IsDecryptionInputValid()
         {
-            return false;
+            if (String.IsNullOrEmpty(decryptionAlphabetTextBox.Text))
+            {
+                MessageBox.Show("Alphabet can't be empty", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+            if (String.IsNullOrEmpty(decryptionCiphertextTextBox.Text))
+            {
+                MessageBox.Show("Please type some text to decrypt", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+            if (String.IsNullOrEmpty(decryptionKeyTextBox.Text))
+            {
+                MessageBox.Show("Decryption key can't be empty", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+
+            return true;
         }
 
         private void decryptionButton_Click(object sender, EventArgs e)
         {
-            if (!ValidateDecryptionInput())
+            if (!IsDecryptionInputValid())
             {
-
                 return;
+            }
+
+            try
+            {
+                HillCipher hillCipher = new HillCipher(decryptionAlphabetTextBox.Text, decryptionKeyTextBox.Text);
+                decryptionPlaintextTextBox.Text = hillCipher.Decrypt(decryptionCiphertextTextBox.Text);
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine(exception.StackTrace);
+                MessageBox.Show(exception.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
     }
